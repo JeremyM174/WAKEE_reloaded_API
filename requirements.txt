@@ -1,0 +1,11 @@
+numpy==1.26.4
+dotenv
+pillow
+onnxruntime==1.20.1
+torchvision
+langchain_core
+langchain_mistralai
+fastapi[standard]
+slowapi
+uvicorn
+huggingface-hub==0.26.0

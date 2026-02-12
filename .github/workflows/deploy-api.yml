@@ -1,0 +1,209 @@
+name: 🚀 Deploy API to HuggingFace Space
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/deploy-api.yml'
+  workflow_dispatch:
+
+jobs:
+  deploy-api:
+    runs-on: ubuntu-latest
+    
+    steps:
+      # ================================================================
+      # 1. CHECKOUT CODE
+      # ================================================================
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      # ================================================================
+      # 2. SETUP PYTHON 3.11
+      # ================================================================
+      - name: 🐍 Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      # ================================================================
+      # 3. INSTALL DEPENDENCIES
+      # ================================================================
+      - name: 📦 Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest httpx
+      
+      # ================================================================
+      # 4. RUN TESTS
+      # ================================================================
+      - name: 🧪 Run API tests
+        run: |
+          python -c "from app import app; print('✅ App loads successfully')"
+        
+      # ================================================================
+      # 5. SETUP HUGGINGFACE CLI 
+      # ================================================================
+      - name: 🤗 Setup HuggingFace CLI
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          pip install huggingface-hub>=0.26.0
+          huggingface-cli login --token $HF_TOKEN
+      
+      # ================================================================
+      # 6. CREATE OR UPDATE HF SPACE 
+      # ================================================================
+      - name: 🏗️ Create/Update HuggingFace Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          python -c "
+          from huggingface_hub import HfApi, create_repo
+          import os
+          
+          api = HfApi(token=os.environ['HF_TOKEN'])
+          space_name = 'Mevelios/WAKEE.reloaded_API'
+          
+          try:
+              api.repo_info(repo_id=space_name, repo_type='space')
+              print(f'✅ Space existe : {space_name}')
+          except:
+              print(f'📦 Création du Space : {space_name}')
+              create_repo(
+                  repo_id=space_name,
+                  repo_type='space',
+                  space_sdk='docker',
+                  exist_ok=True,
+                  token=os.environ['HF_TOKEN']
+              )
+              print(f'✅ Space créé : https://huggingface.co/spaces/{space_name}')
+          "
+      
+      # ================================================================
+      # 7. CONFIGURE SPACE SECRETS
+      # ================================================================
+      - name: 🔐 Configure Space secrets
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          SPACE_NAME: Mevelios/WAKEE.reloaded_API
+          MISTRAL_API_KEY: ${{ secrets.MISTRAL_API_KEY }}
+        run: |
+          python -c "
+          from huggingface_hub import HfApi
+          import os
+          
+          api = HfApi(token=os.environ['HF_TOKEN'])
+          space_name = os.environ['SPACE_NAME']
+          
+          secrets = {
+              'MISTRAL_API_KEY': os.environ.get('MISTRAL_API_KEY', '')
+          }
+          
+          for key, value in secrets.items():
+              if value:
+                  try:
+                      api.add_space_secret(
+                          repo_id=space_name,
+                          key=key,
+                          value=value
+                      )
+                      print(f'✅ Secret ajouté : {key}')
+                  except Exception as e:
+                      print(f'⚠️  Erreur secret {key}: {e}')
+          "
+      
+      # ================================================================
+      # 8. PUSH CODE TO HF SPACE 
+      # ================================================================
+      - name: 🚀 Deploy to HuggingFace Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          SPACE_NAME: Mevelios/WAKEE.reloaded_API
+        run: |
+          # Configuration Git
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Clone avec authentification
+          git clone https://Mevelios:$HF_TOKEN@huggingface.co/spaces/$SPACE_NAME space_repo
+          
+          # Créer structure de dossiers
+          echo "📁 Création des dossiers..."
+          mkdir -p space_repo/model
+          mkdir -p space_repo/static
+          mkdir -p space_repo/templates
+
+          # Vérifier que les fichiers sources existent
+          echo "🔍 Vérification des fichiers sources..."
+          ls -lh app.py cnn.py llm.py model/daisee_model.onnx
+
+          # Copie des fichiers et sous dossier
+          echo "📋 Copie des fichiers..."
+          cp app.py space_repo/
+          cp cnn.py space_repo/
+          cp llm.py space_repo/
+          cp requirements.txt space_repo/
+          cp Dockerfile space_repo/
+
+          echo "📋 Copie des sous-dossiers..."
+          cp model/daisee_model.onnx space_repo/model/daisee_model.onnx
+          cp static/style.css space_repo/static/style.css
+          cp templates/index.html space_repo/templates/index.html
+
+          [ -f README.md ] && cp README.md space_repo/
+          
+          # Vérifier ce qui a été copié
+          echo "📂 Contenu de space_repo :"
+          ls -lhR space_repo/
+
+          # Commit et push
+          cd space_repo
+          git add .
+          
+          if ! git diff --staged --quiet; then
+            git commit -m "🚀 Deploy from GitHub Actions - $(date '+%Y-%m-%d %H:%M:%S')"
+            git push
+          else
+            echo "✅ Aucun changement à déployer"
+          fi
+      
+      # ================================================================
+      # 9. WAIT FOR DEPLOYMENT
+      # ================================================================
+      - name: ⏳ Wait for Space to be ready
+        run: |
+          echo "⏳ Attente du démarrage du Space (5min)..."
+          sleep 300
+      
+      # ================================================================
+      # 10. TEST DEPLOYED API
+      # ================================================================
+      - name: 🧪 Test deployed API
+        run: |
+          echo "🧪 Test de l'API déployée..."
+          
+          # Test health endpoint
+          curl -f https://mevelios-wakee-reloaded-api.hf.space/health || echo "⚠️ Health check failed"
+          
+          # Test root endpoint
+          curl -f https://mevelios-wakee-reloaded-api.hf.space/ || echo "⚠️ Root endpoint failed"
+      
+      # ================================================================
+      # 11. DEPLOYMENT SUMMARY
+      # ================================================================
+      - name: 📢 Deployment summary
+        if: always()
+        run: |
+          echo "================================================"
+          echo "🎉 DÉPLOIEMENT TERMINÉ"
+          echo "================================================"
+          echo "Space URL: https://huggingface.co/spaces/Mevelios/WAKEE.reloaded_API"
+          echo "API URL: https://mevelios-wakee-reloaded-api.hf.space"
+          echo "Status: ${{ job.status }}"
+          echo "================================================"

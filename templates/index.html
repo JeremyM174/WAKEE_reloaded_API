@@ -1,0 +1,56 @@
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <link href={{url_for('static', path='/style.css')}} rel=stylesheet>
+    <title>WAKEE.reloaded's image analysis</title>
+    <style>
+    img {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <img src="https://i83.servimg.com/u/f83/17/01/47/37/wakee_10.png" alt="" height="30" class="d-inline-block align-text-center">
+                WAKEE.reloaded's image analysis
+            </a>
+        </div>
+    </nav>
+    <div class="wrapper container col-8 mt-5">
+        <h1>Hello, and welcome to WAKEE.reloaded!</h1>
+        <p class="mt-4">WAKEE was a project about detecting cognitive drift for people living with ADHD - Attention Deficit Hyperactivity Disorder, to help them focus on their tasks. It comes back as <strong>WAKEE.reloaded</strong> with the full automation of its data lifecycle!</p>
+        <br>
+        <h2>What can you do with this API?</h2>
+        <p>By requesting the API behind this space, you can:
+            <ul>
+                <li>Send an image for recognition of the emotion, preferably without accessories (such as glasses)</li>
+                <li>Receive a personalized suggestion to refocus on your activity, should cognitive drift be recognized (through visual markers of disengagement, frustration, confusion or boredom)</li>
+                <li>And finally keep it for personal use, as this is merely a proof of concept for a student project; by European standards of the AI Act, any other use would be strictly forbidden!</li>
+            </ul>
+        </p>
+        <br>
+        <h2>How to use the API?</h2>
+        <p>If you want to learn more about how the API works, feel free to check its <a href="/docs">documentation</a>. Don't worry, it's very short!</p>
+        <br>
+        <h2>Why such a project?</h2>
+        <p>WAKEE was originally made by four people: Asma RHALMI, Manon FAEDY, Albert ROMANO & Jérémy MARIAGE.
+        <br>
+        <br>
+        Our intent was to demonstrate machine learning is not only about making money by pillaging your personal data: it can help with issues in your daily life such as ADHD, as similar disorders in attention are being increasingly identified.
+        <br>
+        <br>
+        Sadly, given European regulations and the expected deviation in monetizing the concept, WAKEE <strong>cannot be</strong> and <strong>will not be</strong> more than a proof of concept tied to a student project - even if we do not store any logs and delete on purpose all ingested data!
+        </p>
+        <img src="https://i83.servimg.com/u/f83/17/01/47/37/wakee_10.png">
+        
+        <footer class=" footer mt-auto py-3">
+            <ul class="nav justify-content-center border-bottom pb-3 mb-3">
+              <li class="nav-item"></li>
+            </ul>
+            <p class="text-center text-muted">WAKEE.reloaded API, served with passion by Albert ROMANO & Jérémy MARIAGE !</p>
+        </footer>
+    </div>
+</body>

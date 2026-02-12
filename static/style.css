@@ -1,0 +1,12 @@
+.wrapper {
+    min-height: 85vh;
+    display: grid;
+    grid-template-rows: 0.15fr 0.10fr 0.05fr;
+}
+
+.center {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  width: 50%;
+}
