@@ -45,6 +45,7 @@ jobs:
       - name: 🧪 Run API tests
         run: |
           python -c "from app import app; print('✅ App loads successfully')"
+          pytest test/test_api.py 
         
       # ================================================================
       # 5. SETUP HUGGINGFACE CLI 
