@@ -128,53 +128,35 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           SPACE_NAME: Mevelios/WAKEE.reloaded_API
         run: |
-          set -e  # Stop on error
+          set -e
 
-          echo "🔧 Installing Git LFS..."
           git lfs install
 
-          echo "🔐 Configuring Git..."
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
-          echo "📥 Cloning Hugging Face Space..."
           git clone https://Mevelios:${HF_TOKEN}@huggingface.co/spaces/${SPACE_NAME} space_repo
 
           cd space_repo
-
-          echo "🔄 Initializing LFS in repo..."
           git lfs install --local
           git lfs pull
-
-          # Ensure .onnx is tracked (safe even if already tracked)
-          git lfs track "*.onnx"
-          git add .gitattributes
-
           cd ..
 
-          echo "📁 Syncing project files..."
-
-          # Use rsync instead of manual cp (cleaner & safer)
           rsync -av \
             --exclude ".git" \
             --exclude ".github" \
+            --exclude "space_repo" \
             --exclude "__pycache__" \
+            --exclude ".pytest_cache" \
             --exclude "*.pyc" \
             ./ space_repo/
 
           cd space_repo
-
-          echo "📦 Staging files..."
           git add .
-
-          echo "🧠 Checking LFS tracking..."
           git lfs ls-files
-
-          echo "📝 Committing (if changes exist)..."
-          git commit -m "🚀 Deploy from GitHub Actions - $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
-
-          echo "🚀 Pushing to Hugging Face..."
+          git commit -m "🚀 Deploy from GitHub Actions - $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes"
           git push
+
 
       
       # ================================================================
