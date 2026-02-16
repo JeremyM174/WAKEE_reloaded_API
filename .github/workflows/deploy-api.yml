@@ -167,13 +167,8 @@ jobs:
           # Commit et push
           cd space_repo
           git add .
-          
-          if ! git diff --staged --quiet; then
-            git commit -m "🚀 Deploy from GitHub Actions - $(date '+%Y-%m-%d %H:%M:%S')"
-            git push
-          else
-            echo "✅ Aucun changement à déployer"
-          fi
+          git commit -m "🚀 Deploy from GitHub Actions - $(date '+%Y-%m-%d %H:%M:%S')"
+          git push
       
       # ================================================================
       # 9. WAIT FOR DEPLOYMENT
