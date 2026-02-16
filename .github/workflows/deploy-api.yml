@@ -121,62 +121,61 @@ jobs:
           "
       
       # ================================================================
-      # 8. PUSH CODE TO HF SPACE 
+      # 8. PUSH CODE TO HF SPACE (Production Ready - LFS Safe)
       # ================================================================
       - name: 🚀 Deploy to HuggingFace Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           SPACE_NAME: Mevelios/WAKEE.reloaded_API
         run: |
-          # install git LFS because .onnx tracking
+          set -e  # Stop on error
+
+          echo "🔧 Installing Git LFS..."
           git lfs install
 
-          # Configuration Git
+          echo "🔐 Configuring Git..."
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Clone avec authentification
-          git clone https://Mevelios:$HF_TOKEN@huggingface.co/spaces/$SPACE_NAME space_repo
 
-          # pull LFS file (model.onnx)
+          echo "📥 Cloning Hugging Face Space..."
+          git clone https://Mevelios:${HF_TOKEN}@huggingface.co/spaces/${SPACE_NAME} space_repo
+
           cd space_repo
+
+          echo "🔄 Initializing LFS in repo..."
+          git lfs install --local
           git lfs pull
+
+          # Ensure .onnx is tracked (safe even if already tracked)
+          git lfs track "*.onnx"
+          git add .gitattributes
+
           cd ..
-          
-          # Créer structure de dossiers
-          echo "📁 Création des dossiers..."
-          mkdir -p space_repo/model
-          mkdir -p space_repo/static
-          mkdir -p space_repo/templates
 
-          # Vérifier que les fichiers sources existent
-          echo "🔍 Vérification des fichiers sources..."
-          ls -lh app.py cnn.py llm.py model/daisee_model.onnx
+          echo "📁 Syncing project files..."
 
-          # Copie des fichiers et sous dossier
-          echo "📋 Copie des fichiers..."
-          cp app.py space_repo/
-          cp cnn.py space_repo/
-          cp llm.py space_repo/
-          cp requirements.txt space_repo/
-          cp Dockerfile space_repo/
+          # Use rsync instead of manual cp (cleaner & safer)
+          rsync -av \
+            --exclude ".git" \
+            --exclude ".github" \
+            --exclude "__pycache__" \
+            --exclude "*.pyc" \
+            ./ space_repo/
 
-          echo "📋 Copie des sous-dossiers..."
-          cp model/daisee_model.onnx space_repo/model/daisee_model.onnx
-          cp static/style.css space_repo/static/style.css
-          cp templates/index.html space_repo/templates/index.html
-
-          [ -f README.md ] && cp README.md space_repo/
-          
-          # Vérifier ce qui a été copié
-          echo "📂 Contenu de space_repo :"
-          ls -lhR space_repo/
-
-          # Commit et push
           cd space_repo
+
+          echo "📦 Staging files..."
           git add .
-          git commit -m "🚀 Deploy from GitHub Actions - $(date '+%Y-%m-%d %H:%M:%S')"
+
+          echo "🧠 Checking LFS tracking..."
+          git lfs ls-files
+
+          echo "📝 Committing (if changes exist)..."
+          git commit -m "🚀 Deploy from GitHub Actions - $(date '+%Y-%m-%d %H:%M:%S')" || echo "No changes to commit"
+
+          echo "🚀 Pushing to Hugging Face..."
           git push
+
       
       # ================================================================
       # 9. WAIT FOR DEPLOYMENT
