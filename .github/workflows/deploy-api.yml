@@ -128,12 +128,20 @@ jobs:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
           SPACE_NAME: Mevelios/WAKEE.reloaded_API
         run: |
+          # install git LFS because .onnx tracking
+          git lfs install
+
           # Configuration Git
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
           # Clone avec authentification
           git clone https://Mevelios:$HF_TOKEN@huggingface.co/spaces/$SPACE_NAME space_repo
+
+          # pull LFS file (model.onnx)
+          cd space_repo
+          git lfs pull
+          cd ..
           
           # Créer structure de dossiers
           echo "📁 Création des dossiers..."
